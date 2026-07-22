@@ -6,7 +6,7 @@ import 'package:mysql_native_connector_example/utils/generic_states.dart';
 
 class ClientesPageStore extends ChangeNotifier {
   ClientesPageStore({IClientesServices? services})
-      : _services = services ?? ClientesServices.instance;
+    : _services = services ?? ClientesServices.instance;
 
   final IClientesServices _services;
 
@@ -28,7 +28,8 @@ class ClientesPageStore extends ChangeNotifier {
         : await _services.search(_filtro);
 
     result.fold(
-      onSuccess: (data) => state = SuccessGenericState<List<ClienteModel>>(data: data),
+      onSuccess: (data) =>
+          state = SuccessGenericState<List<ClienteModel>>(data: data),
       onError: (message) => state = ErrorGenericState(message: message),
       onEmpty: () => state = EmptyGenericState(),
     );

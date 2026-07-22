@@ -48,12 +48,12 @@ class ClienteModel {
   }
 
   Map<String, Object?> toMap() => {
-        'cli_codigo': codigo,
-        'cli_nome': nome,
-        'cli_fantasia': fantasia,
-        'cli_cgc': cgc,
-        'cli_endereco': endereco,
-      };
+    'cli_codigo': codigo,
+    'cli_nome': nome,
+    'cli_fantasia': fantasia,
+    'cli_cgc': cgc,
+    'cli_endereco': endereco,
+  };
 
   String get nomeExibicao {
     final fantasiaTrim = fantasia?.trim();
