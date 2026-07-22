@@ -1,6 +1,8 @@
-// TODO: Apenas o modelo sabe suas próprias regras de negócio,
-// TODO: então é importante colocar as regras de negócio aqui,
-// TODO: como validações, formatações, etc.
+import 'package:mysql_native_connector/mysql_native_connector.dart';
+
+/// Template do padrão Page → Store → Service → Model.
+///
+/// No conector nativo, prefira [fromRow] em vez de fromJson/HTTP.
 class ExemploModel {
   final String titulo;
   final String descricao;
@@ -10,18 +12,11 @@ class ExemploModel {
     required this.descricao,
   });
 
-  factory ExemploModel.fromJson(Map<String, dynamic> json) {
+  factory ExemploModel.fromRow(MysqlRow row) {
     return ExemploModel(
-      titulo: json['titulo'],
-      descricao: json['descricao'],
+      titulo: row.string('titulo'),
+      descricao: row.string('descricao'),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'titulo': titulo,
-      'descricao': descricao,
-    };
   }
 
   ExemploModel copyWith({

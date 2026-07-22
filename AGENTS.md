@@ -53,11 +53,30 @@ Não reinventar method channels para MySQL — o caminho oficial é **flutter_ru
 
 ```dart
 final config = (await GeralIni.loadFile(path)).toMysqlConfig();
+await MysqlSession.initNative();
 final db = MysqlSession.native();
 await db.connect(config);
-final rows = await db.query(sql);
-final n = await db.execute(sql);
+
+// SQL puro
+final raw = await db.query('SELECT * FROM clientes LIMIT 10');
+
+// ORM leve (sem JSON)
+final clientes = raw.mapRows(Cliente.fromRow);
 await db.close();
 ```
 
-OO sem JSON: `MeuModel.fromRow(MysqlRow row)`.
+OO sem `fromJson`: mapeie `MysqlRow` para classes do domínio:
+
+```dart
+class Cliente {
+  Cliente({required this.codigo, required this.nome});
+  final String codigo;
+  final String nome;
+
+  factory Cliente.fromRow(MysqlRow row) => Cliente(
+        codigo: row.string('cli_codigo'),
+        nome: row.string('cli_nome'),
+      );
+}
+```
+
