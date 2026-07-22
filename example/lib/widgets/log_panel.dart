@@ -56,7 +56,7 @@ class LogPanel extends StatelessWidget {
                       final entry = entries[entries.length - 1 - index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 6),
-                        child: Text(
+                        child: SelectableText(
                           entry.formatted,
                           style: TextStyle(
                             fontFamily: 'Consolas',

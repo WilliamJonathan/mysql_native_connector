@@ -52,6 +52,7 @@ class ConnectionPanel extends StatelessWidget {
                 child: TextField(
                   controller: hostController,
                   enabled: !isConnected,
+                  style: const TextStyle(color: AppTheme.text),
                   decoration: const InputDecoration(labelText: 'Host'),
                 ),
               ),
@@ -60,6 +61,7 @@ class ConnectionPanel extends StatelessWidget {
                 child: TextField(
                   controller: portController,
                   enabled: !isConnected,
+                  style: const TextStyle(color: AppTheme.text),
                   decoration: const InputDecoration(labelText: 'Porta'),
                   keyboardType: TextInputType.number,
                 ),
@@ -73,6 +75,7 @@ class ConnectionPanel extends StatelessWidget {
                 child: TextField(
                   controller: userController,
                   enabled: !isConnected,
+                  style: const TextStyle(color: AppTheme.text),
                   decoration: const InputDecoration(labelText: 'Usuário'),
                 ),
               ),
@@ -82,6 +85,7 @@ class ConnectionPanel extends StatelessWidget {
                   controller: passwordController,
                   enabled: !isConnected,
                   obscureText: true,
+                  style: const TextStyle(color: AppTheme.text),
                   decoration: const InputDecoration(labelText: 'Senha'),
                 ),
               ),
@@ -91,6 +95,7 @@ class ConnectionPanel extends StatelessWidget {
           TextField(
             controller: databaseController,
             enabled: !isConnected,
+            style: const TextStyle(color: AppTheme.text),
             decoration: const InputDecoration(labelText: 'Database'),
           ),
           const SizedBox(height: 12),

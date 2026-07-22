@@ -108,3 +108,10 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+# ERP: coloca geral.ini ao lado do .exe (preferência do locator em Windows).
+set(GERAL_INI_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../geral.ini")
+if(EXISTS "${GERAL_INI_SOURCE}")
+  install(FILES "${GERAL_INI_SOURCE}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+endif()

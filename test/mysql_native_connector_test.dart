@@ -22,6 +22,15 @@ max_connections=8
     expect(config.connectionUrl, contains('10.0.0.5:3307'));
   });
 
+  test('GeralIni aceita BOM e seção [banco]', () {
+    const raw = '\uFEFF[banco]\nhost=192.168.0.10\nusuario=jw\nsenha=\ndatabase=erp\n';
+    final config = GeralIni.parse(raw).toMysqlConfig();
+    expect(config.host, '192.168.0.10');
+    expect(config.user, 'jw');
+    expect(config.password, '');
+    expect(config.database, 'erp');
+  });
+
   test('MysqlSession.demo query/execute', () async {
     final session = MysqlSession.demo();
     await session.connect(

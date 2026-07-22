@@ -73,20 +73,32 @@ LIMIT 10;''',
     try {
       final loaded = await GeralIniLocator.loadPreferred();
       final config = loaded.ini.toMysqlConfig();
+      _applyIniToFields(config);
       setState(() {
         _iniLabel = loaded.label;
-        _host.text = config.host;
-        _port.text = '${config.port}';
-        _user.text = config.user;
-        _password.text = config.password;
-        _database.text = config.database;
         _statusDetail = 'geral.ini carregado';
       });
       _log('geral.ini carregado de ${loaded.label}');
+      _log('Config: ${config.toSafeMap()}');
     } catch (e) {
       _log('Falha ao ler geral.ini: $e', isError: true);
       setState(() => _statusDetail = 'Falha ao ler geral.ini');
     }
+  }
+
+  void _applyIniToFields(MysqlConnectionConfig config) {
+    void setText(TextEditingController controller, String value) {
+      controller.value = TextEditingValue(
+        text: value,
+        selection: TextSelection.collapsed(offset: value.length),
+      );
+    }
+
+    setText(_host, config.host);
+    setText(_port, '${config.port}');
+    setText(_user, config.user);
+    setText(_password, config.password);
+    setText(_database, config.database);
   }
 
   MysqlConnectionConfig _readConfig() {
