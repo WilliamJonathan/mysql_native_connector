@@ -1,0 +1,14 @@
+---
+description: Guardrails gerais do mysql_native_connector (Windows MySQL / VB6)
+alwaysApply: true
+---
+
+# mysql_native_connector — always
+
+- Alvo: Flutter Windows + MySQL direto (sem HTTP), integração ERP VB6.
+- Credenciais só via `geral.ini` / parâmetros — nunca hardcode.
+- Engine nativa em Rust (`sqlx` + tokio) via `flutter_rust_bridge`; não usar method channel para SQL.
+- Não editar `lib/src/rust/**` gerado; alterar Rust em `rust/src/api/` e regenerar.
+- Preferir API pública em `lib/` (`GeralIni`, `MysqlSession`, `MysqlQueryResult`).
+- Windows-first; não adicionar plataformas mobile sem pedido.
+- Ler `AGENTS.md` e a skill do projeto antes de mudanças grandes.

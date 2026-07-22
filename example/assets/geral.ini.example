@@ -1,0 +1,9 @@
+; Template seguro embutido no example (sem senha real).
+; Para desenvolvimento local com credenciais, use ../geral.ini (gitignored).
+[mysql]
+host=127.0.0.1
+port=3306
+user=root
+password=
+database=erp_demo
+max_connections=5

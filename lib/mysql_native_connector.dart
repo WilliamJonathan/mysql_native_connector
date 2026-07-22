@@ -1,7 +1,6 @@
-import 'mysql_native_connector_platform_interface.dart';
+library;
 
-class MysqlNativeConnector {
-  Future<String?> getPlatformVersion() {
-    return MysqlNativeConnectorPlatform.instance.getPlatformVersion();
-  }
-}
+export 'src/config/geral_ini.dart';
+export 'src/config/mysql_connection_config.dart';
+export 'src/models/query_result.dart';
+export 'src/mysql_session.dart';

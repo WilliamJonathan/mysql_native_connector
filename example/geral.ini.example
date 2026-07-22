@@ -1,0 +1,9 @@
+; Copie este arquivo para geral.ini (mesma pasta) e preencha.
+; geral.ini NÃO deve ir para o GitHub.
+[mysql]
+host=127.0.0.1
+port=3306
+user=root
+password=
+database=erp_demo
+max_connections=5

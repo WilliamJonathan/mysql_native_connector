@@ -1,24 +1,24 @@
-// This is a basic Flutter integration test.
-//
-// Since integration tests run in a full Flutter application, they can interact
-// with the host side of a plugin implementation, unlike Dart unit tests.
-//
-// For more information about Flutter integration tests, please see
-// https://flutter.dev/to/integration-testing
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-
 import 'package:mysql_native_connector/mysql_native_connector.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('getPlatformVersion test', (WidgetTester tester) async {
-    final MysqlNativeConnector plugin = MysqlNativeConnector();
-    final String? version = await plugin.getPlatformVersion();
-    // The version string depends on the host platform running the test, so
-    // just assert that some non-empty string is returned.
-    expect(version?.isNotEmpty, true);
+  testWidgets('GeralIni + sessão demo no fluxo básico', (tester) async {
+    const raw = '''
+[mysql]
+host=127.0.0.1
+port=3306
+user=root
+password=
+database=erp_demo
+''';
+    final config = GeralIni.parse(raw).toMysqlConfig();
+    final session = MysqlSession.demo();
+    await session.connect(config);
+    final result = await session.query('SELECT 1');
+    expect(result.rowCount, greaterThan(0));
+    await session.close();
   });
 }

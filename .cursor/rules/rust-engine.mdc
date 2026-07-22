@@ -1,0 +1,13 @@
+---
+description: Regras da engine Rust / FFI MySQL
+globs: rust/**/*.rs
+alwaysApply: false
+---
+
+# Rust engine
+
+- Erros de DB: `Result<T, String>` (ou tipo de erro FRB). Sem `unwrap`/`expect`/`panic!` em connect/query/execute.
+- Pool global com `close` explícito.
+- Nulos SQL → `Option<T>`.
+- Dependências alinhadas ao blueprint: `sqlx` (mysql + tokio), `chrono`, `once_cell`, `flutter_rust_bridge`.
+- Após mudar API pública Rust: rodar codegen do bridge (`flutter_rust_bridge_codegen`).

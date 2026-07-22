@@ -1,0 +1,13 @@
+---
+description: Convenções Dart do plugin e do example GUI
+globs: "{lib,example/lib}/**/*.dart"
+alwaysApply: false
+---
+
+# Dart / GUI
+
+- Exportar API estável só por `lib/mysql_native_connector.dart`.
+- Models de domínio do app consumidor: `fromRow(MysqlRow)`, não forçar JSON.
+- Example: manter painéis conexão / SQL / resultados / log; modo demo até engine nativa.
+- UI desktop sóbria (ERP); evitar temas purple/glow genéricos de IA.
+- Não quebrar leitura de `geral.ini` (seção `[mysql]` + aliases PT).
