@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mysql_native_connector/mysql_native_connector.dart';
 import 'package:mysql_native_connector_example/theme/app_theme.dart';
 
-class ResultsPanel extends StatelessWidget {
+class ResultsPanel extends StatefulWidget {
   const ResultsPanel({
     super.key,
     required this.result,
@@ -11,6 +11,21 @@ class ResultsPanel extends StatelessWidget {
 
   final MysqlQueryResult? result;
   final String? lastMessage;
+
+  @override
+  State<ResultsPanel> createState() => _ResultsPanelState();
+}
+
+class _ResultsPanelState extends State<ResultsPanel> {
+  final _horizontalController = ScrollController();
+  final _verticalController = ScrollController();
+
+  @override
+  void dispose() {
+    _horizontalController.dispose();
+    _verticalController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +52,10 @@ class ResultsPanel extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                if (result != null)
+                if (widget.result != null)
                   Text(
-                    '${result!.rowCount} linha(s)'
-                    '${result!.duration != null ? ' · ${result!.duration!.inMilliseconds} ms' : ''}',
+                    '${widget.result!.rowCount} linha(s)'
+                    '${widget.result!.duration != null ? ' · ${widget.result!.duration!.inMilliseconds} ms' : ''}',
                     style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                   ),
               ],
@@ -54,17 +69,18 @@ class ResultsPanel extends StatelessWidget {
   }
 
   Widget _buildBody() {
+    final result = widget.result;
     if (result == null) {
       return Center(
         child: Text(
-          lastMessage ?? 'Execute um SELECT para ver a grade aqui.',
+          widget.lastMessage ?? 'Execute um SELECT para ver a grade aqui.',
           style: const TextStyle(color: AppTheme.textMuted),
           textAlign: TextAlign.center,
         ),
       );
     }
 
-    if (result!.isEmpty) {
+    if (result.isEmpty) {
       return const Center(
         child: Text(
           'Consulta retornou 0 linhas.',
@@ -74,24 +90,32 @@ class ResultsPanel extends StatelessWidget {
     }
 
     return Scrollbar(
+      controller: _horizontalController,
       thumbVisibility: true,
+      notificationPredicate: (notification) => notification.depth == 0,
       child: SingleChildScrollView(
+        controller: _horizontalController,
         scrollDirection: Axis.horizontal,
-        child: SingleChildScrollView(
-          child: DataTable(
-            columns: [
-              for (final column in result!.columns)
-                DataColumn(label: Text(column)),
-            ],
-            rows: [
-              for (final row in result!.rows)
-                DataRow(
-                  cells: [
-                    for (var i = 0; i < result!.columns.length; i++)
-                      DataCell(Text('${row.values[i] ?? ''}')),
-                  ],
-                ),
-            ],
+        child: Scrollbar(
+          controller: _verticalController,
+          thumbVisibility: true,
+          child: SingleChildScrollView(
+            controller: _verticalController,
+            child: DataTable(
+              columns: [
+                for (final column in result.columns)
+                  DataColumn(label: Text(column)),
+              ],
+              rows: [
+                for (final row in result.rows)
+                  DataRow(
+                    cells: [
+                      for (var i = 0; i < result.columns.length; i++)
+                        DataCell(Text('${row.values[i] ?? ''}')),
+                    ],
+                  ),
+              ],
+            ),
           ),
         ),
       ),

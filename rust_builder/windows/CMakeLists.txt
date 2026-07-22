@@ -9,7 +9,9 @@ set(PROJECT_NAME "rust_lib_mysql_native_connector")
 project(${PROJECT_NAME} LANGUAGES CXX)
 
 include("../cargokit/cmake/cargokit.cmake")
-apply_cargokit(${PROJECT_NAME} ../../../../../../rust rust_lib_mysql_native_connector "")
+# From example/.../.plugin_symlinks/<plugin>/windows (Windows does not resolve
+# that symlink in CMAKE_CURRENT_SOURCE_DIR), seven levels reach the repo root.
+apply_cargokit(${PROJECT_NAME} ../../../../../../../rust rust_lib_mysql_native_connector "")
 
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
