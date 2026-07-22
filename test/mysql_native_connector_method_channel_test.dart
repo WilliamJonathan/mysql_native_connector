@@ -5,7 +5,8 @@ import 'package:mysql_native_connector/mysql_native_connector_method_channel.dar
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  MethodChannelMysqlNativeConnector platform = MethodChannelMysqlNativeConnector();
+  MethodChannelMysqlNativeConnector platform =
+      MethodChannelMysqlNativeConnector();
   const MethodChannel channel = MethodChannel('mysql_native_connector');
 
   setUp(() {

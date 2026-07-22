@@ -12,7 +12,8 @@ class MockMysqlNativeConnectorPlatform
 }
 
 void main() {
-  final MysqlNativeConnectorPlatform initialPlatform = MysqlNativeConnectorPlatform.instance;
+  final MysqlNativeConnectorPlatform initialPlatform =
+      MysqlNativeConnectorPlatform.instance;
 
   test('$MethodChannelMysqlNativeConnector is the default instance', () {
     expect(initialPlatform, isInstanceOf<MethodChannelMysqlNativeConnector>());
@@ -20,7 +21,8 @@ void main() {
 
   test('getPlatformVersion', () async {
     MysqlNativeConnector mysqlNativeConnectorPlugin = MysqlNativeConnector();
-    MockMysqlNativeConnectorPlatform fakePlatform = MockMysqlNativeConnectorPlatform();
+    MockMysqlNativeConnectorPlatform fakePlatform =
+        MockMysqlNativeConnectorPlatform();
     MysqlNativeConnectorPlatform.instance = fakePlatform;
 
     expect(await mysqlNativeConnectorPlugin.getPlatformVersion(), '42');

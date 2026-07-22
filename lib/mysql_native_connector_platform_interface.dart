@@ -8,7 +8,8 @@ abstract class MysqlNativeConnectorPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static MysqlNativeConnectorPlatform _instance = MethodChannelMysqlNativeConnector();
+  static MysqlNativeConnectorPlatform _instance =
+      MethodChannelMysqlNativeConnector();
 
   /// The default instance of [MysqlNativeConnectorPlatform] to use.
   ///
