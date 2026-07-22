@@ -34,13 +34,13 @@ geral.ini → GeralIni → MysqlConnectionConfig → connect()
 
 ```
 Progress:
-- [ ] Cargo.toml: sqlx + tokio + chrono + once_cell
-- [ ] rust/src/models.rs + api (init/query/execute/close)
-- [ ] Sem unwrap/panic em rotas de DB
-- [ ] flutter_rust_bridge_codegen generate
-- [ ] MysqlSession.native() chama FFI
-- [ ] example: desligar demo e testar contra MySQL real
-- [ ] flutter analyze + flutter test
+- [x] Cargo.toml: sqlx + tokio + chrono + once_cell
+- [x] rust/src/models.rs + api (init/query/execute/close)
+- [x] Sem unwrap/panic em rotas de DB
+- [x] flutter_rust_bridge_codegen generate
+- [x] MysqlSession.native() chama FFI
+- [x] example: SQL clientes real; demo opcional
+- [ ] flutter analyze + flutter test (verificar após mudanças)
 ```
 
 ## Checklist: mudar API Dart pública

@@ -15,8 +15,8 @@ Credenciais: geral.ini (nunca hardcoded no binário)
 
 ## Escopo atual
 
-- **Feito:** GUI example, parser `geral.ini`, API Dart (`MysqlSession` demo/stub), docs Cursor.
-- **Não feito ainda:** engine Rust real, FRB das funções de DB, `.exe` virtualizado.
+- **Feito:** GUI example, parser `geral.ini`, API Dart (`MysqlSession` demo + native), engine Rust (`sqlx` + pool) via FRB.
+- **Não feito ainda:** `.exe` virtualizado / empacote portátil para VB6.
 
 Não reinventar method channels para MySQL — o caminho oficial é **flutter_rust_bridge**.
 

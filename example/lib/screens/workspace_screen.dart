@@ -25,7 +25,10 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   final _password = TextEditingController();
   final _database = TextEditingController();
   final _sql = TextEditingController(
-    text: 'SELECT id, codigo, nome, ativo, criado_em FROM clientes LIMIT 50',
+    text: '''SELECT
+  *
+FROM clientes
+LIMIT 10;''',
   );
 
   final _logs = <AppLogEntry>[];
@@ -35,7 +38,7 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
   String? _resultMessage;
   String _iniLabel = 'carregando…';
   String _statusDetail = 'Carregando geral.ini';
-  bool _useDemo = true;
+  bool _useDemo = false;
   bool _busy = false;
   bool _connected = false;
 
@@ -110,7 +113,8 @@ class _WorkspaceScreenState extends State<WorkspaceScreen> {
       setState(() {
         _session = session;
         _connected = true;
-        _statusDetail = '${config.user}@${config.host}:${config.port}/${config.database}';
+        _statusDetail =
+            '${config.user}@${config.host}:${config.port}/${config.database}';
       });
       _log(
         _useDemo

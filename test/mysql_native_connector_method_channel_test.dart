@@ -10,19 +10,9 @@ void main() {
     expect(row.toMap(), {'id': 7, 'nome': 'Alpha'});
   });
 
-  test('MysqlSession.native ainda não implementado', () async {
+  test('MysqlSession.native começa desconectado', () {
     final session = MysqlSession.native();
-    expect(
-      () => session.connect(
-        const MysqlConnectionConfig(
-          host: '127.0.0.1',
-          port: 3306,
-          user: 'root',
-          password: '',
-          database: 'x',
-        ),
-      ),
-      throwsA(isA<UnimplementedError>()),
-    );
+    expect(session.isConnected, isFalse);
+    expect(session.config, isNull);
   });
 }

@@ -14,8 +14,8 @@ Flutter UI  →  Dart API  →  Rust FFI (sqlx)  →  MySQL TCP
 |--------|--------|
 | GUI example (console desktop) | Pronto |
 | Leitura `geral.ini` | Pronto |
-| API Dart (`MysqlSession`, `MysqlQueryResult`) | Pronto (demo + stub nativo) |
-| Engine Rust (`sqlx` + pool) | Próxima etapa |
+| API Dart (`MysqlSession`, `MysqlQueryResult`) | Pronto (demo + nativo) |
+| Engine Rust (`sqlx` + pool) | Pronto (Windows FFI) |
 | Empacote `.exe` único (Enigma etc.) | Depois |
 
 ## Uso rápido (app Flutter)
@@ -32,8 +32,8 @@ import 'package:mysql_native_connector/mysql_native_connector.dart';
 final ini = await GeralIni.loadFile(r'C:\erp\geral.ini');
 final config = ini.toMysqlConfig();
 
-// Enquanto a engine Rust não estiver pronta:
-final session = MysqlSession.demo();
+await MysqlSession.initNative(); // uma vez no main (Windows)
+final session = MysqlSession.native(); // ou MysqlSession.demo() sem MySQL
 await session.connect(config);
 
 final result = await session.query('SELECT id, nome FROM clientes LIMIT 20');
@@ -109,7 +109,6 @@ flutter run -d windows --dart-define=... # ou passe args nativos do Windows
 
 ## Próximos passos
 
-1. Implementar pool MySQL em Rust (`init_db_pool`, `query`, `execute`, `close`)
-2. Regenerar `flutter_rust_bridge`
-3. Trocar `MysqlSession.native()` pelo FFI real
-4. Empacotar release Windows em `.exe` portátil para o VB6
+1. Empacotar release Windows em `.exe` portátil para o VB6
+2. Models de domínio OO (`Cliente.fromRow`) nos módulos ERP
+3. Virtualizar / proteger o binário se necessário (Enigma etc.)

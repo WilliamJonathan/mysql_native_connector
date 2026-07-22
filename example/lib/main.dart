@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:mysql_native_connector/mysql_native_connector.dart';
 import 'package:mysql_native_connector_example/screens/workspace_screen.dart';
 import 'package:mysql_native_connector_example/theme/app_theme.dart';
 
-void main(List<String> arguments) {
+Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
+  await MysqlSession.initNative();
   runApp(MysqlConnectorApp(launchArgs: arguments));
 }
 
