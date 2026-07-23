@@ -24,10 +24,7 @@ description: >-
 ## Architecture
 
 ```text
-example GUI → MysqlSession (Dart)
-                ├─ demo()     # UI/dev sem MySQL
-                └─ native()   # Rust FFI (sqlx) — alvo
-geral.ini → GeralIni → MysqlConnectionConfig → connect()
+Page → Store (fold) → Service (ResultState) → Model/ORM → MysqlSession → Rust → MySQL
 ```
 
 ## Checklist: ligar engine Rust
@@ -67,11 +64,13 @@ Aliases: `servidor`, `porta`, `usuario`, `senha`, `banco`.
 ## OO sem fromJson
 
 ```dart
-factory Pedido.fromRow(MysqlRow row) => Pedido(
-  id: row['id'] as int,
-  total: row['total'] as double?,
-);
+Mysql.bind(session);
+final rows = await ClienteModel.all();
+// ou
+final rows = await ClienteModel.query().orderBy('cli_nome').limit(50).get();
 ```
+
+Fase 2: codegen `@MysqlTable` / `@MysqlColumn` → gerar `schema` + facades.
 
 ## Commands
 

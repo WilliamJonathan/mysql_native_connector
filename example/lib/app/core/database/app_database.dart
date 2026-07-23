@@ -41,9 +41,11 @@ class AppDatabase {
     _session = session;
     _config = config;
     _sourceLabel = loaded.label;
+    Mysql.bind(session);
   }
 
   Future<void> close() async {
+    Mysql.unbind();
     await _session?.close();
     _session = null;
   }

@@ -1,9 +1,10 @@
 import 'package:mysql_native_connector/mysql_native_connector.dart';
 
-/// Model de domínio — regras/formatação ficam aqui (não na Page).
+/// Model ActiveRecord de `clientes` (Fase 1: schema manual + repository).
 ///
-/// Padrão da lib: `fromRow` (sem JSON/HTTP).
-class ClienteModel {
+/// Anotações já antecipam a Fase 2 (codegen). O runtime usa [schema] / [db].
+@MysqlTable('clientes')
+class ClienteModel extends MysqlModel<ClienteModel> {
   const ClienteModel({
     required this.codigo,
     required this.nome,
@@ -12,11 +13,60 @@ class ClienteModel {
     this.endereco,
   });
 
+  static const schema = MysqlTableSchema(
+    name: 'clientes',
+    primaryKey: 'cli_codigo',
+    columns: [
+      'cli_codigo',
+      'cli_nome',
+      'cli_fantasia',
+      'cli_cgc',
+      'cli_endereco',
+    ],
+  );
+
+  static final db = MysqlRepository<ClienteModel>(
+    schema: schema,
+    fromRow: ClienteModel.fromRow,
+    toColumns: (m) => m.toColumns(),
+    idOf: (m) => m.codigo,
+  );
+
+  @MysqlPrimaryKey('cli_codigo')
   final String codigo;
+
+  @MysqlNotNull('cli_nome')
   final String nome;
+
+  @MysqlColumn('cli_fantasia')
   final String? fantasia;
+
+  @MysqlColumn('cli_cgc')
   final String? cgc;
+
+  @MysqlColumn('cli_endereco')
   final String? endereco;
+
+  // --- facades estáticas (Fase 2 gerará automaticamente) ---
+
+  static MysqlQuery<ClienteModel> query() => db.query();
+
+  static Future<List<ClienteModel>> all({int limit = 50}) =>
+      db.all(limit: limit, orderBy: '`cli_nome` ASC');
+
+  static Future<ClienteModel?> find(Object id) => db.find(id);
+
+  static Future<List<ClienteModel>> raw(String sql) => db.raw(sql);
+
+  static Future<List<ClienteModel>> search(String termo, {int limit = 50}) {
+    final like = mysqlLiteral('%${termo.trim()}%');
+    return db.get(
+      where:
+          'cli_nome LIKE $like OR cli_fantasia LIKE $like OR cli_cgc LIKE $like',
+      orderBy: '`cli_nome` ASC',
+      limit: limit,
+    );
+  }
 
   factory ClienteModel.fromRow(MysqlRow row) {
     return ClienteModel(
@@ -28,32 +78,19 @@ class ClienteModel {
     );
   }
 
-  /// Útil se algum fluxo ainda trouxer Map (não é o caminho principal).
-  factory ClienteModel.fromMap(Map<String, Object?> map) {
-    String read(String key) => '${map[key] ?? ''}';
-    String? readOpt(String key) {
-      final value = map[key];
-      if (value == null) return null;
-      final text = '$value';
-      return text.isEmpty ? null : text;
-    }
-
-    return ClienteModel(
-      codigo: read('cli_codigo'),
-      nome: read('cli_nome'),
-      fantasia: readOpt('cli_fantasia'),
-      cgc: readOpt('cli_cgc'),
-      endereco: readOpt('cli_endereco'),
-    );
-  }
-
-  Map<String, Object?> toMap() => {
+  @override
+  Map<String, Object?> toColumns() => {
     'cli_codigo': codigo,
     'cli_nome': nome,
     'cli_fantasia': fantasia,
     'cli_cgc': cgc,
     'cli_endereco': endereco,
   };
+
+  /// Persistência da instância (INSERT ou UPDATE).
+  Future<ClienteModel> save() => db.save(this);
+
+  Future<bool> delete() => db.delete(this);
 
   String get nomeExibicao {
     final fantasiaTrim = fantasia?.trim();

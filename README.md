@@ -15,6 +15,8 @@ Flutter UI  →  Dart API  →  Rust FFI (sqlx)  →  MySQL TCP
 | GUI example (console desktop) | Pronto |
 | Leitura `geral.ini` | Pronto |
 | API Dart (`MysqlSession`, `MysqlQueryResult`) | Pronto (demo + nativo) |
+| ORM leve Fase 1 (`MysqlRepository` / ActiveRecord) | Pronto |
+| ORM Fase 2 (codegen `@MysqlTable`) | Próxima |
 | Engine Rust (`sqlx` + pool) | Pronto (Windows FFI) |
 | Empacote `.exe` único (Enigma etc.) | Depois |
 
@@ -45,18 +47,42 @@ for (final row in result.rows) {
 await session.close();
 ```
 
+### ORM leve (Fase 1)
+
+```dart
+await session.connect(config);
+Mysql.bind(session);
+
+// ActiveRecord
+final clientes = await ClienteModel.all();
+final um = await ClienteModel.find('10');
+await ClienteModel(codigo: '99', nome: 'Novo').save();
+
+// Query builder
+final lista = await ClienteModel.query()
+    .orderBy('cli_nome')
+    .limit(20)
+    .get();
+
+// SQL puro
+final raw = await ClienteModel.raw('SELECT * FROM clientes LIMIT 5');
+```
+
+O Store da UI usa `ResultState.fold` via Service (erros encapsulados).  
+O Model/ORM fornece o acesso ao banco; Service não some.  
+Fase 2: codegen a partir de `@MysqlTable` / `@MysqlColumn` (anotações já existem).
+
 Orientação a objetos sem `fromJson`: mapeie `MysqlRow` para classes do domínio:
 
 ```dart
-class Cliente {
-  Cliente({required this.id, required this.nome});
-  final int id;
-  final String nome;
-
-  factory Cliente.fromRow(MysqlRow row) => Cliente(
-        id: row['id'] as int,
-        nome: '${row['nome']}',
-      );
+@MysqlTable('clientes')
+class Cliente extends MysqlModel<Cliente> {
+  static const schema = MysqlTableSchema(
+    name: 'clientes',
+    primaryKey: 'cli_codigo',
+    columns: ['cli_codigo', 'cli_nome'],
+  );
+  // ...
 }
 ```
 
@@ -109,6 +135,7 @@ flutter run -d windows --dart-define=... # ou passe args nativos do Windows
 
 ## Próximos passos
 
-1. Empacotar release Windows em `.exe` portátil para o VB6
-2. Models de domínio OO (`Cliente.fromRow`) nos módulos ERP
-3. Virtualizar / proteger o binário se necessário (Enigma etc.)
+1. ORM Fase 2: `build_runner` + `@MysqlTable` gerando `.g.dart`
+2. Binds SQL (`?`) na engine Rust
+3. Empacotar release Windows em `.exe` portátil para o VB6
+4. Models de domínio OO nos módulos ERP

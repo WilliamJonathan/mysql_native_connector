@@ -4,9 +4,10 @@ import 'package:mysql_native_connector_example/app/pages/clientes/models/cliente
 import 'package:mysql_native_connector_example/app/pages/clientes/services/clientes_services.dart';
 import 'package:mysql_native_connector_example/utils/generic_states.dart';
 
+/// Ponte UI ↔ backend. Erros já vêm encapsulados no [ResultState] do service.
 class ClientesPageStore extends ChangeNotifier {
   ClientesPageStore({IClientesServices? services})
-    : _services = services ?? ClientesServices.instance;
+      : _services = services ?? ClientesServices.instance;
 
   final IClientesServices _services;
 

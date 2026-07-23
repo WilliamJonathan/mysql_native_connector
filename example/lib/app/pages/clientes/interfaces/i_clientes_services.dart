@@ -6,7 +6,6 @@ abstract class IClientesServices {
 
   Future<ResultState<ClienteModel>> show(String codigo);
 
-  /// Exemplo de SQL puro customizado (filtro livre).
   Future<ResultState<List<ClienteModel>>> search(String termo, {int limit = 50});
 
   Future<ResultState<ClienteModel>> store(ClienteModel model);
