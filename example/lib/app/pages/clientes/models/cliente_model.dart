@@ -1,11 +1,19 @@
 import 'package:mysql_native_connector/mysql_native_connector.dart';
 
-/// Model ActiveRecord de `clientes` (Fase 1: schema manual + repository).
+part 'cliente_model.mysql.g.dart';
+
+/// Eloquent-style: anotações + `extends MysqlModel` + codegen.
 ///
-/// Anotações já antecipam a Fase 2 (codegen). O runtime usa [schema] / [db].
-@MysqlTable('clientes')
-class ClienteModel extends MysqlModel<ClienteModel> {
-  const ClienteModel({
+/// ```dart
+/// await Mysql.bootFromIni(...);
+/// final rows = await ClienteModel.index();
+/// final one = await ClienteModel.show('10');
+/// await ClienteModel.store(model);
+/// await ClienteModel.destroy('10');
+/// ```
+@MysqlTable('clientes', orderBy: 'cli_nome')
+class ClienteModel extends MysqlModel {
+  ClienteModel({
     required this.codigo,
     required this.nome,
     this.fantasia,
@@ -13,29 +21,10 @@ class ClienteModel extends MysqlModel<ClienteModel> {
     this.endereco,
   });
 
-  static const schema = MysqlTableSchema(
-    name: 'clientes',
-    primaryKey: 'cli_codigo',
-    columns: [
-      'cli_codigo',
-      'cli_nome',
-      'cli_fantasia',
-      'cli_cgc',
-      'cli_endereco',
-    ],
-  );
-
-  static final db = MysqlRepository<ClienteModel>(
-    schema: schema,
-    fromRow: ClienteModel.fromRow,
-    toColumns: (m) => m.toColumns(),
-    idOf: (m) => m.codigo,
-  );
-
   @MysqlPrimaryKey('cli_codigo')
   final String codigo;
 
-  @MysqlNotNull('cli_nome')
+  @MysqlColumn('cli_nome')
   final String nome;
 
   @MysqlColumn('cli_fantasia')
@@ -47,50 +36,29 @@ class ClienteModel extends MysqlModel<ClienteModel> {
   @MysqlColumn('cli_endereco')
   final String? endereco;
 
-  // --- facades estáticas (Fase 2 gerará automaticamente) ---
+  // --- API Laravel (facades → motor gerado) ---
 
-  static MysqlQuery<ClienteModel> query() => db.query();
+  static Future<List<ClienteModel>> index({int limit = 50}) =>
+      _ClienteModelMysql.index(limit: limit);
 
-  static Future<List<ClienteModel>> all({int limit = 50}) =>
-      db.all(limit: limit, orderBy: '`cli_nome` ASC');
+  static Future<ClienteModel?> show(Object id) => _ClienteModelMysql.show(id);
 
-  static Future<ClienteModel?> find(Object id) => db.find(id);
+  static Future<ClienteModel> store(ClienteModel model) =>
+      _ClienteModelMysql.store(model);
 
-  static Future<List<ClienteModel>> raw(String sql) => db.raw(sql);
+  static Future<ClienteModel> update(ClienteModel model) =>
+      _ClienteModelMysql.update(model);
 
-  static Future<List<ClienteModel>> search(String termo, {int limit = 50}) {
-    final like = mysqlLiteral('%${termo.trim()}%');
-    return db.get(
-      where:
-          'cli_nome LIKE $like OR cli_fantasia LIKE $like OR cli_cgc LIKE $like',
-      orderBy: '`cli_nome` ASC',
-      limit: limit,
-    );
-  }
+  static Future<bool> destroy(Object id) => _ClienteModelMysql.destroy(id);
 
-  factory ClienteModel.fromRow(MysqlRow row) {
-    return ClienteModel(
-      codigo: row.string('cli_codigo'),
-      nome: row.string('cli_nome'),
-      fantasia: row.asString('cli_fantasia'),
-      cgc: row.asString('cli_cgc'),
-      endereco: row.asString('cli_endereco'),
-    );
-  }
+  static Future<List<ClienteModel>> raw(String sql) =>
+      _ClienteModelMysql.raw(sql);
 
-  @override
-  Map<String, Object?> toColumns() => {
-    'cli_codigo': codigo,
-    'cli_nome': nome,
-    'cli_fantasia': fantasia,
-    'cli_cgc': cgc,
-    'cli_endereco': endereco,
-  };
+  static MysqlQuery<ClienteModel> query() => _ClienteModelMysql.query();
 
-  /// Persistência da instância (INSERT ou UPDATE).
-  Future<ClienteModel> save() => db.save(this);
+  factory ClienteModel.fromRow(MysqlRow row) => _ClienteModelMysql.fromRow(row);
 
-  Future<bool> delete() => db.delete(this);
+  // --- domínio ---
 
   String get nomeExibicao {
     final fantasiaTrim = fantasia?.trim();

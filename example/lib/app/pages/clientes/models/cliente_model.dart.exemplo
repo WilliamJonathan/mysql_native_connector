@@ -1,13 +1,10 @@
 import 'package:mysql_native_connector/mysql_native_connector.dart';
 
-/// Espelho do alvo **Fase 2** (codegen).
-///
-/// Hoje (Fase 1) o runtime ainda usa `schema` + `MysqlRepository` manuais em
-/// `cliente_model.dart`. Na Fase 2, `build_runner` gera `.g.dart` a partir destas
-/// anotações e as facades `all`/`find`/`save` deixam de ser escritas à mão.
-@MysqlTable('clientes')
-class ClienteModelExemplo extends MysqlModel<ClienteModelExemplo> {
-  const ClienteModelExemplo({
+/// Alvo mental (Laravel): só anotações + domínio.
+/// Rode `dart run build_runner build` para gerar o motor + facades.
+@MysqlTable('clientes', orderBy: 'cli_nome')
+class ClienteModelExemplo extends MysqlModel {
+  ClienteModelExemplo({
     required this.codigo,
     required this.nome,
     this.fantasia,
@@ -18,7 +15,7 @@ class ClienteModelExemplo extends MysqlModel<ClienteModelExemplo> {
   @MysqlPrimaryKey('cli_codigo')
   final String codigo;
 
-  @MysqlNotNull('cli_nome')
+  @MysqlColumn('cli_nome')
   final String nome;
 
   @MysqlColumn('cli_fantasia')
@@ -30,7 +27,6 @@ class ClienteModelExemplo extends MysqlModel<ClienteModelExemplo> {
   @MysqlColumn('cli_endereco')
   final String? endereco;
 
-  // Fase 2 geraria:
-  // static Future<List<ClienteModel>> all() => ...
-  // factory fromRow / toColumns / save / delete
+  // API gerada / facades:
+  // ClienteModel.index() / .show() / .store() / .update() / .destroy()
 }

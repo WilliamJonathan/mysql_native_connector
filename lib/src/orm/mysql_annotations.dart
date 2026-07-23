@@ -1,19 +1,18 @@
-/// Anotações do ORM leve.
+/// Anotações estilo Eloquent / Laravel.
 ///
-/// **Fase 1:** marcadores de documentação / contrato futuro (sem codegen).
-/// O runtime usa [MysqlTableSchema] declarado manualmente no model.
-///
-/// **Fase 2:** `source_gen` lerá estas anotações e gerará schema + `fromRow` /
-/// `toColumns` / facades estáticas (`ClienteModel.all()`, etc.).
+/// Use com `extends MysqlModel` + `part '*.mysql.g.dart'` e rode:
+/// `dart run build_runner build`
 library;
 
-/// Marca a classe como entidade MySQL (`@MysqlTable('clientes')`).
+/// `@MysqlTable('clientes', orderBy: 'cli_nome')`
 class MysqlTable {
   final String name;
-  const MysqlTable(this.name);
+  final String? orderBy;
+
+  const MysqlTable(this.name, {this.orderBy});
 }
 
-/// Coluna mapeada (`@MysqlColumn('cli_nome')`).
+/// `@MysqlColumn('cli_nome')`
 class MysqlColumn {
   final String name;
   final bool primaryKey;
@@ -26,12 +25,12 @@ class MysqlColumn {
   });
 }
 
-/// Atalho de PK (`@MysqlPrimaryKey('cli_codigo')`).
+/// `@MysqlPrimaryKey('cli_codigo')`
 class MysqlPrimaryKey extends MysqlColumn {
   const MysqlPrimaryKey(super.name) : super(primaryKey: true, notNull: true);
 }
 
-/// Atalho NOT NULL (`@MysqlNotNull('cli_nome')`).
+/// `@MysqlNotNull('cli_nome')`
 class MysqlNotNull extends MysqlColumn {
   const MysqlNotNull(super.name) : super(notNull: true);
 }

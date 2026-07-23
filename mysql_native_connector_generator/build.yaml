@@ -1,0 +1,7 @@
+builders:
+  mysql_eloquent:
+    import: "package:mysql_native_connector_generator/builder.dart"
+    builder_factories: ["mysqlEloquentBuilder"]
+    build_extensions: { ".dart": [".mysql.g.dart"] }
+    auto_apply: dependents
+    build_to: source

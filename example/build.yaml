@@ -1,0 +1,5 @@
+targets:
+  $default:
+    builders:
+      mysql_native_connector_generator|mysql_eloquent:
+        enabled: true

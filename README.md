@@ -47,30 +47,19 @@ for (final row in result.rows) {
 await session.close();
 ```
 
-### ORM leve (Fase 1)
+### ORM estilo Laravel (Eloquent)
 
 ```dart
-await session.connect(config);
-Mysql.bind(session);
+await Mysql.bootFromIni(r'C:\erp\geral.ini'); // sessão global
 
-// ActiveRecord
-final clientes = await ClienteModel.all();
-final um = await ClienteModel.find('10');
-await ClienteModel(codigo: '99', nome: 'Novo').save();
-
-// Query builder
-final lista = await ClienteModel.query()
-    .orderBy('cli_nome')
-    .limit(20)
-    .get();
-
-// SQL puro
-final raw = await ClienteModel.raw('SELECT * FROM clientes LIMIT 5');
+final clientes = await ClienteModel.index();
+final um = await ClienteModel.show('10');
+await ClienteModel.store(ClienteModel(codigo: '99', nome: 'Novo'));
+await ClienteModel.destroy('99');
 ```
 
-O Store da UI usa `ResultState.fold` via Service (erros encapsulados).  
-O Model/ORM fornece o acesso ao banco; Service não some.  
-Fase 2: codegen a partir de `@MysqlTable` / `@MysqlColumn` (anotações já existem).
+Model limpo (anotações + domínio). O motor fica em `*.mysql.g.dart`.  
+Service continua com `ResultState` / `fold` — Store não muda.
 
 Orientação a objetos sem `fromJson`: mapeie `MysqlRow` para classes do domínio:
 

@@ -1,10 +1,7 @@
-/// Base tipada opcional (Fase 1).
+/// Contrato mínimo do model Eloquent.
 ///
-/// Models podem só usar [MysqlRepository] estático; esta classe documenta o
-/// contrato que o codegen da Fase 2 vai materializar.
-abstract class MysqlModel<T extends MysqlModel<T>> {
+/// A classe concreta fica limpa (campos + anotações). O `*.mysql.g.dart`
+/// gera o “motor” `_\$XxxMysql` com `index/show/store/update/destroy`.
+abstract class MysqlModel {
   const MysqlModel();
-
-  /// Mapa coluna SQL → valor (para INSERT/UPDATE).
-  Map<String, Object?> toColumns();
 }

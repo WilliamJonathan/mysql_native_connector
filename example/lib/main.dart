@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mysql_native_connector/mysql_native_connector.dart';
 import 'package:mysql_native_connector_example/app/core/database/app_database.dart';
 import 'package:mysql_native_connector_example/app/pages/clientes/clientes_page.dart';
 import 'package:mysql_native_connector_example/app/pages/clientes/stores/clientes_page_store.dart';
@@ -9,10 +8,10 @@ import 'package:provider/provider.dart';
 
 Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
-  await MysqlSession.initNative();
 
   String? bootError;
   try {
+    // Mysql.boot (via AppDatabase) já faz initNative + connect + bind no ORM.
     await AppDatabase.instance.open();
   } catch (e) {
     bootError = '$e';
