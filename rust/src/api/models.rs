@@ -1,4 +1,7 @@
 /// Valor de célula tipado (NULL → variante Null → null no Dart).
+///
+/// Owned de propósito: a fronteira FRB exige valores que sobrevivam ao drop
+/// dos buffers `MySqlRow` e à serialização SSE/DCO.
 #[derive(Debug, Clone)]
 pub enum CellValue {
     Null,

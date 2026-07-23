@@ -1238,6 +1238,7 @@ dependencies = [
  "flutter_rust_bridge",
  "once_cell",
  "sqlx",
+ "thiserror",
  "tokio",
 ]
 

@@ -70,7 +70,7 @@ fn wire__crate__api__database__close_db_pool_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, crate::api::error::DbError>(
                     (move || async move {
                         let output_ok = crate::api::database::close_db_pool().await?;
                         Ok(output_ok)
@@ -106,7 +106,7 @@ fn wire__crate__api__database__execute_sql_impl(
             let api_sql = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, crate::api::error::DbError>(
                     (move || async move {
                         let output_ok = crate::api::database::execute_sql(api_sql).await?;
                         Ok(output_ok)
@@ -207,7 +207,7 @@ fn wire__crate__api__database__init_db_pool_impl(
             let api_max_connections = <u32>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, crate::api::error::DbError>(
                     (move || async move {
                         let output_ok =
                             crate::api::database::init_db_pool(api_url, api_max_connections)
@@ -281,7 +281,7 @@ fn wire__crate__api__database__query_sql_impl(
             let api_sql = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
-                transform_result_sse::<_, String>(
+                transform_result_sse::<_, crate::api::error::DbError>(
                     (move || async move {
                         let output_ok = crate::api::database::query_sql(api_sql).await?;
                         Ok(output_ok)
@@ -337,6 +337,47 @@ impl SseDecode for crate::api::models::CellValue {
             5 => {
                 let mut var_field0 = <Vec<u8>>::sse_decode(deserializer);
                 return crate::api::models::CellValue::Bytes(var_field0);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseDecode for crate::api::error::DbError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                return crate::api::error::DbError::EmptyUrl;
+            }
+            1 => {
+                return crate::api::error::DbError::EmptySql;
+            }
+            2 => {
+                return crate::api::error::DbError::PoolNotInitialized;
+            }
+            3 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::error::DbError::Connect(var_field0);
+            }
+            4 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::error::DbError::Query(var_field0);
+            }
+            5 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::error::DbError::Execute(var_field0);
+            }
+            6 => {
+                let mut var_index = <usize>::sse_decode(deserializer);
+                let mut var_message = <String>::sse_decode(deserializer);
+                return crate::api::error::DbError::Column {
+                    index: var_index,
+                    message: var_message,
+                };
             }
             _ => {
                 unimplemented!("");
@@ -462,6 +503,13 @@ impl SseDecode for () {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {}
 }
 
+impl SseDecode for usize {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u64::<NativeEndian>().unwrap() as _
+    }
+}
+
 impl SseDecode for i32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -538,6 +586,40 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::models::CellValue>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::error::DbError {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::api::error::DbError::EmptyUrl => [0.into_dart()].into_dart(),
+            crate::api::error::DbError::EmptySql => [1.into_dart()].into_dart(),
+            crate::api::error::DbError::PoolNotInitialized => [2.into_dart()].into_dart(),
+            crate::api::error::DbError::Connect(field0) => {
+                [3.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::DbError::Query(field0) => {
+                [4.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::DbError::Execute(field0) => {
+                [5.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::DbError::Column { index, message } => [
+                6.into_dart(),
+                index.into_into_dart().into_dart(),
+                message.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::error::DbError {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::error::DbError> for crate::api::error::DbError {
+    fn into_into_dart(self) -> crate::api::error::DbError {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::models::NativeQueryResult {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -601,6 +683,43 @@ impl SseEncode for crate::api::models::CellValue {
             crate::api::models::CellValue::Bytes(field0) => {
                 <i32>::sse_encode(5, serializer);
                 <Vec<u8>>::sse_encode(field0, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseEncode for crate::api::error::DbError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::api::error::DbError::EmptyUrl => {
+                <i32>::sse_encode(0, serializer);
+            }
+            crate::api::error::DbError::EmptySql => {
+                <i32>::sse_encode(1, serializer);
+            }
+            crate::api::error::DbError::PoolNotInitialized => {
+                <i32>::sse_encode(2, serializer);
+            }
+            crate::api::error::DbError::Connect(field0) => {
+                <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::api::error::DbError::Query(field0) => {
+                <i32>::sse_encode(4, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::api::error::DbError::Execute(field0) => {
+                <i32>::sse_encode(5, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::api::error::DbError::Column { index, message } => {
+                <i32>::sse_encode(6, serializer);
+                <usize>::sse_encode(index, serializer);
+                <String>::sse_encode(message, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -707,6 +826,16 @@ impl SseEncode for u8 {
 impl SseEncode for () {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
+}
+
+impl SseEncode for usize {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer
+            .cursor
+            .write_u64::<NativeEndian>(self as _)
+            .unwrap();
+    }
 }
 
 impl SseEncode for i32 {

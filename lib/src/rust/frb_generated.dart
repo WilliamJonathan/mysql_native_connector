@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/database.dart';
+import 'api/error.dart';
 import 'api/models.dart';
 import 'api/simple.dart';
 import 'dart:async';
@@ -121,7 +122,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_String,
+          decodeErrorData: sse_decode_db_error,
         ),
         constMeta: kCrateApiDatabaseCloseDbPoolConstMeta,
         argValues: [],
@@ -149,7 +150,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_u_64,
-          decodeErrorData: sse_decode_String,
+          decodeErrorData: sse_decode_db_error,
         ),
         constMeta: kCrateApiDatabaseExecuteSqlConstMeta,
         argValues: [sql],
@@ -231,7 +232,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_String,
+          decodeErrorData: sse_decode_db_error,
         ),
         constMeta: kCrateApiDatabaseInitDbPoolConstMeta,
         argValues: [url, maxConnections],
@@ -288,7 +289,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_native_query_result,
-          decodeErrorData: sse_decode_String,
+          decodeErrorData: sse_decode_db_error,
         ),
         constMeta: kCrateApiDatabaseQuerySqlConstMeta,
         argValues: [sql],
@@ -334,6 +335,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return CellValue_Text(dco_decode_String(raw[1]));
       case 5:
         return CellValue_Bytes(dco_decode_list_prim_u_8_strict(raw[1]));
+      default:
+        throw Exception("unreachable");
+    }
+  }
+
+  @protected
+  DbError dco_decode_db_error(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    switch (raw[0]) {
+      case 0:
+        return DbError_EmptyUrl();
+      case 1:
+        return DbError_EmptySql();
+      case 2:
+        return DbError_PoolNotInitialized();
+      case 3:
+        return DbError_Connect(dco_decode_String(raw[1]));
+      case 4:
+        return DbError_Query(dco_decode_String(raw[1]));
+      case 5:
+        return DbError_Execute(dco_decode_String(raw[1]));
+      case 6:
+        return DbError_Column(
+          index: dco_decode_usize(raw[1]),
+          message: dco_decode_String(raw[2]),
+        );
       default:
         throw Exception("unreachable");
     }
@@ -420,6 +447,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt dco_decode_usize(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
+  }
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
@@ -461,6 +494,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 5:
         var var_field0 = sse_decode_list_prim_u_8_strict(deserializer);
         return CellValue_Bytes(var_field0);
+      default:
+        throw UnimplementedError('');
+    }
+  }
+
+  @protected
+  DbError sse_decode_db_error(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var tag_ = sse_decode_i_32(deserializer);
+    switch (tag_) {
+      case 0:
+        return DbError_EmptyUrl();
+      case 1:
+        return DbError_EmptySql();
+      case 2:
+        return DbError_PoolNotInitialized();
+      case 3:
+        var var_field0 = sse_decode_String(deserializer);
+        return DbError_Connect(var_field0);
+      case 4:
+        var var_field0 = sse_decode_String(deserializer);
+        return DbError_Query(var_field0);
+      case 5:
+        var var_field0 = sse_decode_String(deserializer);
+        return DbError_Execute(var_field0);
+      case 6:
+        var var_index = sse_decode_usize(deserializer);
+        var var_message = sse_decode_String(deserializer);
+        return DbError_Column(index: var_index, message: var_message);
       default:
         throw UnimplementedError('');
     }
@@ -575,6 +638,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt sse_decode_usize(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getInt32();
@@ -619,6 +688,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case CellValue_Bytes(field0: final field0):
         sse_encode_i_32(5, serializer);
         sse_encode_list_prim_u_8_strict(field0, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_db_error(DbError self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    switch (self) {
+      case DbError_EmptyUrl():
+        sse_encode_i_32(0, serializer);
+      case DbError_EmptySql():
+        sse_encode_i_32(1, serializer);
+      case DbError_PoolNotInitialized():
+        sse_encode_i_32(2, serializer);
+      case DbError_Connect(field0: final field0):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(field0, serializer);
+      case DbError_Query(field0: final field0):
+        sse_encode_i_32(4, serializer);
+        sse_encode_String(field0, serializer);
+      case DbError_Execute(field0: final field0):
+        sse_encode_i_32(5, serializer);
+        sse_encode_String(field0, serializer);
+      case DbError_Column(index: final index, message: final message):
+        sse_encode_i_32(6, serializer);
+        sse_encode_usize(index, serializer);
+        sse_encode_String(message, serializer);
     }
   }
 
@@ -720,6 +815,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_usize(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(self);
   }
 
   @protected

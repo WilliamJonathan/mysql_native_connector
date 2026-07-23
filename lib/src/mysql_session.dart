@@ -212,6 +212,9 @@ Object? _cellToObject(rust_models.CellValue cell) {
 }
 
 String _rustError(String op, Object error) {
+  if (error is FrbException) {
+    return 'Rust/$op: $error';
+  }
   if (error is AnyhowException) {
     return 'Rust/$op: ${error.message}';
   }

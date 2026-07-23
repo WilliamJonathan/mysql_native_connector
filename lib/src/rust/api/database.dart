@@ -4,12 +4,13 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+import 'error.dart';
 import 'models.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `decode_cell`
+// These functions are ignored because they are not marked as `pub`: `decode_cell`, `fallback_text_or_null`, `pool_snapshot`, `type_is`
 
-/// Abre (ou substitui) o pool MySQL. Credenciais vêm do Dart (`geral.ini`), nunca hardcoded.
+/// Abre (ou substitui) o pool MySQL. Credenciais vêm do Dart (`geral.ini`).
 Future<void> initDbPool({required String url, required int maxConnections}) =>
     RustLib.instance.api.crateApiDatabaseInitDbPool(
       url: url,
@@ -20,11 +21,11 @@ Future<void> initDbPool({required String url, required int maxConnections}) =>
 Future<NativeQueryResult> querySql({required String sql}) =>
     RustLib.instance.api.crateApiDatabaseQuerySql(sql: sql);
 
-/// INSERT / UPDATE / DELETE → quantidade de linhas afetadas.
+/// INSERT / UPDATE / DELETE → linhas afetadas.
 Future<BigInt> executeSql({required String sql}) =>
     RustLib.instance.api.crateApiDatabaseExecuteSql(sql: sql);
 
-/// Fecha o pool explicitamente (obrigatório no ciclo de vida da sessão).
+/// Fecha o pool explicitamente (ciclo de vida da sessão).
 Future<void> closeDbPool() =>
     RustLib.instance.api.crateApiDatabaseCloseDbPool();
 
