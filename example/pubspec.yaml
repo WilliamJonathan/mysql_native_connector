@@ -25,6 +25,10 @@ dev_dependencies:
   mysql_native_connector_generator:
     path: ../mysql_native_connector_generator
 
+# source_gen 3.1.x incompatível com analyzer 8.4+ (erro getInvocation).
+dependency_overrides:
+  analyzer: 8.2.0
+
 flutter:
   uses-material-design: true
   assets:

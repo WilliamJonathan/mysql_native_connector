@@ -18,17 +18,28 @@ class MysqlColumn {
   final bool primaryKey;
   final bool notNull;
 
-  const MysqlColumn(this.name, {this.primaryKey = false, this.notNull = false});
+  const MysqlColumn(
+    this.name, {
+    this.primaryKey = false,
+    this.notNull = false,
+  });
 }
 
 /// `@MysqlPrimaryKey('cli_codigo')`
-class MysqlPrimaryKey extends MysqlColumn {
-  const MysqlPrimaryKey(super.name) : super(primaryKey: true, notNull: true);
+///
+/// Classe própria (não estende [MysqlColumn]) para o analyzer conseguir
+/// avaliar a constante no `build_runner`.
+class MysqlPrimaryKey {
+  final String name;
+
+  const MysqlPrimaryKey(this.name);
 }
 
-/// `@MysqlNotNull('cli_nome')`
-class MysqlNotNull extends MysqlColumn {
-  const MysqlNotNull(super.name) : super(notNull: true);
+/// `@MysqlNotNull('cli_nome')` — coluna obrigatória (atalho semântico).
+class MysqlNotNull {
+  final String name;
+
+  const MysqlNotNull(this.name);
 }
 
 /// Relação 1:0..1 via LEFT JOIN (somente leitura nesta fase).
@@ -41,19 +52,10 @@ class MysqlNotNull extends MysqlColumn {
 /// )
 /// final EnderecoModel? endereco;
 /// ```
-///
-/// Só colunas anotadas do model relacionado entram no SELECT (com alias).
 class LeftJoin {
-  /// Tabela SQL da relação.
   final String table;
-
-  /// Coluna na tabela **dona** (ex.: `cli_codigo`).
   final String localKey;
-
-  /// Coluna na tabela **join** (ex.: `end_cliente`).
   final String foreignKey;
-
-  /// Alias SQL da tabela join (default: nome do campo Dart).
   final String? alias;
 
   const LeftJoin({

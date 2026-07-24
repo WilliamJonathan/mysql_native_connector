@@ -207,11 +207,12 @@ extension ${className}MysqlColumns on $className {
         ? 'null'
         : "row['${j.alias}__${j.columns.first.columnName}']";
     final args = j.columns.map((c) {
+      // Nullability vem do model relacionado — não forçar T? no join.
       final aliased = _Col(
         fieldName: c.fieldName,
         columnName: '${j.alias}__${c.columnName}',
         dartType: c.dartType,
-        nullable: true,
+        nullable: c.nullable,
         primaryKey: c.primaryKey,
       );
       return '${c.fieldName}: ${_rowReader(aliased)}';
@@ -225,36 +226,87 @@ extension ${className}MysqlColumns on $className {
   }
 
   MysqlColumn? _columnAnnotation(FieldElement field) {
-    for (final meta in field.metadata.annotations) {
+    for (final meta in _annotationsOf(field)) {
       final value = meta.computeConstantValue();
-      if (value == null) continue;
-      final type = value.type;
-      if (type == null) continue;
-      if (_pkChecker.isExactlyType(type) ||
-          _nnChecker.isExactlyType(type) ||
-          _columnChecker.isAssignableFromType(type)) {
-        final name = value.getField('name')?.toStringValue();
-        final primaryKey = value.getField('primaryKey')?.toBoolValue() ?? false;
-        final notNull = value.getField('notNull')?.toBoolValue() ?? false;
-        if (name == null) return null;
-        return MysqlColumn(name, primaryKey: primaryKey, notNull: notNull);
+      if (value != null && value.type != null) {
+        final type = value.type!;
+        if (_pkChecker.isExactlyType(type)) {
+          final name = value.getField('name')?.toStringValue();
+          if (name != null) {
+            return MysqlColumn(name, primaryKey: true, notNull: true);
+          }
+        }
+        if (_nnChecker.isExactlyType(type)) {
+          final name = value.getField('name')?.toStringValue();
+          if (name != null) {
+            return MysqlColumn(name, notNull: true);
+          }
+        }
+        if (_columnChecker.isExactlyType(type)) {
+          final name = value.getField('name')?.toStringValue();
+          final primaryKey =
+              value.getField('primaryKey')?.toBoolValue() ?? false;
+          final notNull = value.getField('notNull')?.toBoolValue() ?? false;
+          if (name != null) {
+            return MysqlColumn(name, primaryKey: primaryKey, notNull: notNull);
+          }
+        }
+      }
+
+      // Fallback se a constante não avaliar (ex.: anotação antiga / analyzer).
+      final typeName = _annotationClassName(meta);
+      final arg = _firstStringArg(meta);
+      if (typeName == 'MysqlPrimaryKey' && arg != null) {
+        return MysqlColumn(arg, primaryKey: true, notNull: true);
+      }
+      if (typeName == 'MysqlNotNull' && arg != null) {
+        return MysqlColumn(arg, notNull: true);
+      }
+      if (typeName == 'MysqlColumn' && arg != null) {
+        return MysqlColumn(arg);
       }
     }
     return null;
   }
 
-  _Join? _leftJoinAnnotation(FieldElement field) {
-    for (final meta in field.metadata.annotations) {
-      final value = meta.computeConstantValue();
-      if (value == null) continue;
-      final type = value.type;
-      if (type == null || !_leftJoinChecker.isExactlyType(type)) continue;
+  Iterable<ElementAnnotation> _annotationsOf(Element element) {
+    return element.metadata.annotations;
+  }
 
-      final table = value.getField('table')?.toStringValue();
-      final localKey = value.getField('localKey')?.toStringValue();
-      final foreignKey = value.getField('foreignKey')?.toStringValue();
-      final alias =
-          value.getField('alias')?.toStringValue() ?? field.name!;
+  String? _annotationClassName(ElementAnnotation meta) {
+    final el = meta.element;
+    if (el is ConstructorElement) {
+      final enclosing = el.enclosingElement;
+      return enclosing.name;
+    }
+    return null;
+  }
+
+  String? _firstStringArg(ElementAnnotation meta) {
+    final source = meta.toSource();
+    final match = RegExp(r'''\(\s*['"]([^'"]+)['"]''').firstMatch(source);
+    return match?.group(1);
+  }
+
+  _Join? _leftJoinAnnotation(FieldElement field) {
+    for (final meta in _annotationsOf(field)) {
+      final value = meta.computeConstantValue();
+      final isLeftJoin = (value?.type != null &&
+              _leftJoinChecker.isExactlyType(value!.type!)) ||
+          _annotationClassName(meta) == 'LeftJoin';
+      if (!isLeftJoin) continue;
+
+      String? table;
+      String? localKey;
+      String? foreignKey;
+      String? alias;
+      if (value != null) {
+        table = value.getField('table')?.toStringValue();
+        localKey = value.getField('localKey')?.toStringValue();
+        foreignKey = value.getField('foreignKey')?.toStringValue();
+        alias = value.getField('alias')?.toStringValue();
+      }
+      alias ??= field.name!;
 
       if (table == null || localKey == null || foreignKey == null) {
         throw InvalidGenerationSourceError(
@@ -272,7 +324,6 @@ extension ${className}MysqlColumns on $className {
         );
       }
 
-      // Aceita EnderecoModel? → element ainda é a class.
       final relatedColumns = _columnsOf(relatedElement);
       if (relatedColumns.isEmpty) {
         throw InvalidGenerationSourceError(
@@ -282,7 +333,6 @@ extension ${className}MysqlColumns on $className {
         );
       }
 
-      // Valida que o relacionado tem @MysqlTable (aviso via tabela explícita).
       _ensureMysqlTable(relatedElement, field);
 
       return _Join(
@@ -300,10 +350,11 @@ extension ${className}MysqlColumns on $className {
   }
 
   void _ensureMysqlTable(ClassElement related, FieldElement field) {
-    final hasTable = related.metadata.annotations.any((meta) {
+    final hasTable = _annotationsOf(related).any((meta) {
       final value = meta.computeConstantValue();
       final type = value?.type;
-      return type != null && _tableChecker.isExactlyType(type);
+      if (type != null && _tableChecker.isExactlyType(type)) return true;
+      return _annotationClassName(meta) == 'MysqlTable';
     });
     if (!hasTable) {
       throw InvalidGenerationSourceError(
@@ -334,12 +385,13 @@ extension ${className}MysqlColumns on $className {
   }
 
   bool _hasLeftJoinMeta(FieldElement field) {
-    for (final meta in field.metadata.annotations) {
+    for (final meta in _annotationsOf(field)) {
       final value = meta.computeConstantValue();
       final type = value?.type;
       if (type != null && _leftJoinChecker.isExactlyType(type)) {
         return true;
       }
+      if (_annotationClassName(meta) == 'LeftJoin') return true;
     }
     return false;
   }

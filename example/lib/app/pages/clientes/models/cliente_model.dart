@@ -1,15 +1,12 @@
 import 'package:mysql_native_connector/mysql_native_connector.dart';
+import 'package:mysql_native_connector_example/app/pages/clientes/models/endere_cli_model.dart';
 
 part 'cliente_model.mysql.g.dart';
 
 /// Eloquent-style: anotações + `extends MysqlModel&lt;T&gt;` + codegen.
 ///
-/// ```dart
-/// await Mysql.bootFromIni(...);
-/// ClienteModel.box; // registra no Mysql.of (1×)
-/// final rows = await Mysql.of&lt;ClienteModel&gt;().index();
-/// await cliente.store();
-/// ```
+/// Depois de mudar anotações, rode no `example/`:
+/// `dart run build_runner build --delete-conflicting-outputs`
 @MysqlTable('clientes', orderBy: 'cli_nome')
 class ClienteModel extends MysqlModel<ClienteModel> {
   ClienteModel({
@@ -18,6 +15,7 @@ class ClienteModel extends MysqlModel<ClienteModel> {
     this.fantasia,
     this.cgc,
     this.endereco,
+    this.enderecoCli,
   });
 
   @MysqlPrimaryKey('cli_codigo')
@@ -35,7 +33,14 @@ class ClienteModel extends MysqlModel<ClienteModel> {
   @MysqlColumn('cli_endereco')
   final String? endereco;
 
-  /// “Box” tipado (ObjectBox-like). Também registra em [Mysql.of].
+  /// LEFT JOIN em `cliente_enderecos` (1:0..1 nesta fase do ORM).
+  @LeftJoin(
+    table: 'cliente_enderecos',
+    localKey: 'cli_codigo',
+    foreignKey: 'end_cli',
+  )
+  final EnderecoCliModel? enderecoCli;
+
   static MysqlBox<ClienteModel> get box => _ClienteModelMysql.box;
 
   factory ClienteModel.fromRow(MysqlRow row) => _ClienteModelMysql.fromRow(row);
@@ -65,6 +70,7 @@ class ClienteModel extends MysqlModel<ClienteModel> {
     String? fantasia,
     String? cgc,
     String? endereco,
+    EnderecoCliModel? enderecoCli,
   }) {
     return ClienteModel(
       codigo: codigo ?? this.codigo,
@@ -72,6 +78,7 @@ class ClienteModel extends MysqlModel<ClienteModel> {
       fantasia: fantasia ?? this.fantasia,
       cgc: cgc ?? this.cgc,
       endereco: endereco ?? this.endereco,
+      enderecoCli: enderecoCli ?? this.enderecoCli,
     );
   }
 }

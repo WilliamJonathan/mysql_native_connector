@@ -7,8 +7,8 @@ environment:
   sdk: ^3.11.5
 
 dependencies:
-  # Alinhar com freezed do plugin (analyzer 10 / source_gen 2).
-  analyzer: ^8.1.1
+  # source_gen 3.1.x quebra com analyzer >= 8.4 (getInvocation removido).
+  analyzer: 8.2.0
   build: ^3.0.0
   source_gen: ^3.0.0
   mysql_native_connector:

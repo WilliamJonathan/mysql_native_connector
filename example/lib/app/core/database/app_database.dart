@@ -1,6 +1,6 @@
 import 'package:mysql_native_connector/mysql_native_connector.dart';
 import 'package:mysql_native_connector_example/app/pages/clientes/models/cliente_model.dart';
-import 'package:mysql_native_connector_example/app/pages/clientes/models/endereco_model.dart';
+import 'package:mysql_native_connector_example/app/pages/clientes/models/endere_cli_model.dart';
 import 'package:mysql_native_connector_example/services/geral_ini_locator.dart';
 
 /// Bootstrap do example — delega ao [Mysql.boot] (sessão global do ORM).
@@ -30,7 +30,7 @@ class AppDatabase {
   /// Garante [Mysql.of] (top-level/static lazy do Dart só roda ao tocar o box).
   void _ensureModelsRegistered() {
     ClienteModel.box;
-    EnderecoModel.box;
+    EnderecoCliModel.box;
   }
 
   Future<void> close() async {

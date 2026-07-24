@@ -133,12 +133,16 @@ class _ClienteTile extends StatelessWidget {
         subtitle: Text(
           [
             'Cód. ${cliente.codigo}',
-            if ((cliente.cgcFormatado).isNotEmpty) cliente.cgcFormatado,
-            if ((cliente.endereco ?? '').trim().isNotEmpty) cliente.endereco!,
+            if (cliente.cgcFormatado.isNotEmpty) cliente.cgcFormatado,
+            if (cliente.enderecoCli != null) cliente.enderecoCli!.resumo,
+            if (cliente.enderecoCli == null &&
+                (cliente.endereco ?? '').trim().isNotEmpty)
+              cliente.endereco!,
           ].join(' · '),
           style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
         ),
-        isThreeLine: (cliente.endereco ?? '').trim().isNotEmpty,
+        isThreeLine: cliente.enderecoCli != null ||
+            (cliente.endereco ?? '').trim().isNotEmpty,
       ),
     );
   }
