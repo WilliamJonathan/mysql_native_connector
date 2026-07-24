@@ -18,11 +18,7 @@ class MysqlColumn {
   final bool primaryKey;
   final bool notNull;
 
-  const MysqlColumn(
-    this.name, {
-    this.primaryKey = false,
-    this.notNull = false,
-  });
+  const MysqlColumn(this.name, {this.primaryKey = false, this.notNull = false});
 }
 
 /// `@MysqlPrimaryKey('cli_codigo')`
