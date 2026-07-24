@@ -15,8 +15,8 @@ Flutter UI  →  Dart API  →  Rust FFI (sqlx)  →  MySQL TCP
 | GUI example (console desktop) | Pronto |
 | Leitura `geral.ini` | Pronto |
 | API Dart (`MysqlSession`, `MysqlQueryResult`) | Pronto (demo + nativo) |
-| ORM leve Fase 1 (`MysqlRepository` / ActiveRecord) | Pronto |
-| ORM Fase 2 (codegen `@MysqlTable`) | Próxima |
+| ORM leve (`Mysql.of` / `MysqlModel` / ActiveRecord) | Pronto |
+| ORM codegen (`@MysqlTable` + `@LeftJoin`) | Pronto |
 | Engine Rust (`sqlx` + pool) | Pronto (Windows FFI) |
 | Empacote `.exe` único (Enigma etc.) | Depois |
 
@@ -47,33 +47,49 @@ for (final row in result.rows) {
 await session.close();
 ```
 
-### ORM estilo Laravel (Eloquent)
+### ORM estilo Laravel (Eloquent) — analogia ObjectBox
 
-```dart
-await Mysql.bootFromIni(r'C:\erp\geral.ini'); // sessão global
+Em Dart, `static` **não herda**. O paralelo certo é o box tipado:
 
-final clientes = await ClienteModel.index();
-final um = await ClienteModel.show('10');
-await ClienteModel.store(ClienteModel(codigo: '99', nome: 'Novo'));
-await ClienteModel.destroy('99');
+```text
+ObjectBox:  store.box<Cliente>().getAll()
+Este ORM:   Mysql.of<ClienteModel>().index()
 ```
 
-Model limpo (anotações + domínio). O motor fica em `*.mysql.g.dart`.  
-Service continua com `ResultState` / `fold` — Store não muda.
+```dart
+await Mysql.bootFromIni(r'C:\erp\geral.ini');
+ClienteModel.box; // registra no Mysql.of (AppDatabase já faz isso)
 
-Orientação a objetos sem `fromJson`: mapeie `MysqlRow` para classes do domínio:
+final clientes = await Mysql.of<ClienteModel>().index();
+final um = await Mysql.of<ClienteModel>().show('10');
+
+final novo = ClienteModel(codigo: '99', nome: 'Novo');
+await novo.store();
+await um!.update();
+await um.destroy();
+```
+
+Model limpo (`@MysqlTable` / `@MysqlColumn` / opcional `@LeftJoin` + domínio).  
+Motor em `*.mysql.g.dart`. Service continua com `ResultState` / `fold`.
 
 ```dart
-@MysqlTable('clientes')
-class Cliente extends MysqlModel<Cliente> {
-  static const schema = MysqlTableSchema(
-    name: 'clientes',
-    primaryKey: 'cli_codigo',
-    columns: ['cli_codigo', 'cli_nome'],
-  );
-  // ...
+@MysqlTable('clientes', orderBy: 'cli_nome')
+class ClienteModel extends MysqlModel<ClienteModel> {
+  @MysqlPrimaryKey('cli_codigo')
+  final String codigo;
+
+  @MysqlColumn('cli_nome')
+  final String nome;
+
+  // Opcional — só se a tabela existir no ERP:
+  // @LeftJoin(table: 'enderecos', localKey: 'cli_codigo', foreignKey: 'end_cliente')
+  // final EnderecoModel? enderecoRel;
+
+  static MysqlBox<ClienteModel> get box => _ClienteModelMysql.box;
 }
 ```
+
+Só campos anotados entram no `SELECT`. Joins acrescentam colunas `alias__coluna`.
 
 ## `geral.ini`
 
@@ -124,7 +140,7 @@ flutter run -d windows --dart-define=... # ou passe args nativos do Windows
 
 ## Próximos passos
 
-1. ORM Fase 2: `build_runner` + `@MysqlTable` gerando `.g.dart`
-2. Binds SQL (`?`) na engine Rust
+1. Binds SQL (`?`) na engine Rust (tirar `mysqlLiteral` do search)
+2. Persistência em cascata de `@LeftJoin` (hoje join é só leitura)
 3. Empacotar release Windows em `.exe` portátil para o VB6
-4. Models de domínio OO nos módulos ERP
+4. HasMany / coleções aninhadas

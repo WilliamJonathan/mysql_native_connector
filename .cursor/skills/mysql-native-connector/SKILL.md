@@ -64,13 +64,13 @@ Aliases: `servidor`, `porta`, `usuario`, `senha`, `banco`.
 ## OO sem fromJson
 
 ```dart
-Mysql.bind(session);
-final rows = await ClienteModel.all();
-// ou
-final rows = await ClienteModel.query().orderBy('cli_nome').limit(50).get();
+ClienteModel.box; // register
+final rows = await Mysql.of<ClienteModel>().index();
+await Mysql.of<ClienteModel>().query().orderBy('cli_nome').limit(50).get();
+await cliente.store();
 ```
 
-Fase 2: codegen `@MysqlTable` / `@MysqlColumn` → gerar `schema` + facades.
+Codegen: `@MysqlTable` / `@MysqlColumn` / `@LeftJoin` → `*.mysql.g.dart` + `Mysql.register`.
 
 ## Commands
 

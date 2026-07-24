@@ -1,32 +1,30 @@
-# Continuar amanhã — ORM Eloquent
+# ORM Eloquent — status
 
-## Onde paramos (2026-07-23)
+## Feito (2026-07-23)
 
-- Model limpo com `@MysqlTable` / `@MysqlColumn` + facades Laravel:
-  - `ClienteModel.index()` / `.show()` / `.store()` / `.update()` / `.destroy()`
-- Motor em `cliente_model.mysql.g.dart` (formato do codegen)
-- Sessão global: `Mysql.boot` / `AppDatabase.open()`
-- **Service + Store com `result.fold` mantidos** (não remover)
+- API opção 4: `Mysql.of<T>().index/show/...` + `model.store/update/destroy()`
+- Analogia ObjectBox: `ClienteModel.box` registra e espelha o handle tipado
+- `@MysqlTable` / `@MysqlColumn` / `@LeftJoin` + generator no example
+- SELECT só com colunas anotadas; joins com alias `campo__coluna`
+- Service + Store com `result.fold` mantidos
 
-## Próximo passo (amanhã)
+## Próximo (opcional)
 
-1. Ligar de vez o `mysql_native_connector_generator` no `example` (`build_runner`)
-2. Fazer o generator **escrever também as facades** `index/show/store/...` (hoje ainda há one-liners no model)
-3. Meta: model só com anotações + domínio; zero boilerplate de API
-4. (Opcional) binds `?` no Rust para tirar `mysqlLiteral` do search
+1. Binds `?` no Rust (tirar `mysqlLiteral`)
+2. Cascata de escrita no join
+3. HasMany
 
-## Comandos úteis
+## Comandos
 
 ```bash
 cd example
 flutter run -d windows
-# quando generator estiver no pubspec:
 dart run build_runner build --delete-conflicting-outputs
 ```
 
 ## Arquivos-chave
 
+- `lib/src/orm/` — Mysql, MysqlBox, MysqlModel, schema, anotações
 - `example/lib/app/pages/clientes/models/cliente_model.dart`
-- `example/lib/app/pages/clientes/models/cliente_model.mysql.g.dart`
+- `example/lib/app/pages/clientes/models/endereco_model.dart` (exemplo LeftJoin)
 - `mysql_native_connector_generator/`
-- `lib/src/orm/`

@@ -2,17 +2,16 @@ import 'package:mysql_native_connector/mysql_native_connector.dart';
 
 part 'cliente_model.mysql.g.dart';
 
-/// Eloquent-style: anotações + `extends MysqlModel` + codegen.
+/// Eloquent-style: anotações + `extends MysqlModel&lt;T&gt;` + codegen.
 ///
 /// ```dart
 /// await Mysql.bootFromIni(...);
-/// final rows = await ClienteModel.index();
-/// final one = await ClienteModel.show('10');
-/// await ClienteModel.store(model);
-/// await ClienteModel.destroy('10');
+/// ClienteModel.box; // registra no Mysql.of (1×)
+/// final rows = await Mysql.of&lt;ClienteModel&gt;().index();
+/// await cliente.store();
 /// ```
 @MysqlTable('clientes', orderBy: 'cli_nome')
-class ClienteModel extends MysqlModel {
+class ClienteModel extends MysqlModel<ClienteModel> {
   ClienteModel({
     required this.codigo,
     required this.nome,
@@ -36,29 +35,10 @@ class ClienteModel extends MysqlModel {
   @MysqlColumn('cli_endereco')
   final String? endereco;
 
-  // --- API Laravel (facades → motor gerado) ---
-
-  static Future<List<ClienteModel>> index({int limit = 50}) =>
-      _ClienteModelMysql.index(limit: limit);
-
-  static Future<ClienteModel?> show(Object id) => _ClienteModelMysql.show(id);
-
-  static Future<ClienteModel> store(ClienteModel model) =>
-      _ClienteModelMysql.store(model);
-
-  static Future<ClienteModel> update(ClienteModel model) =>
-      _ClienteModelMysql.update(model);
-
-  static Future<bool> destroy(Object id) => _ClienteModelMysql.destroy(id);
-
-  static Future<List<ClienteModel>> raw(String sql) =>
-      _ClienteModelMysql.raw(sql);
-
-  static MysqlQuery<ClienteModel> query() => _ClienteModelMysql.query();
+  /// “Box” tipado (ObjectBox-like). Também registra em [Mysql.of].
+  static MysqlBox<ClienteModel> get box => _ClienteModelMysql.box;
 
   factory ClienteModel.fromRow(MysqlRow row) => _ClienteModelMysql.fromRow(row);
-
-  // --- domínio ---
 
   String get nomeExibicao {
     final fantasiaTrim = fantasia?.trim();

@@ -5,7 +5,7 @@ import 'package:mysql_native_connector/src/orm/mysql_table_schema.dart';
 /// Query builder fluido em cima de [MysqlRepository].
 ///
 /// ```dart
-/// await ClienteModel.query().orderBy('cli_nome').limit(50).get();
+/// await Mysql.of&lt;ClienteModel&gt;().query().orderBy('cli_nome').limit(50).get();
 /// ```
 class MysqlQuery<T> {
   MysqlQuery(this._repo);

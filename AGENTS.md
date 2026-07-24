@@ -15,8 +15,8 @@ Credenciais: geral.ini (nunca hardcoded no binário)
 
 ## Escopo atual
 
-- **Feito:** GUI example, parser `geral.ini`, API Dart (`MysqlSession` demo + native), engine Rust (`sqlx` + pool) via FRB.
-- **Não feito ainda:** `.exe` virtualizado / empacote portátil para VB6.
+- **Feito:** GUI example, `geral.ini`, `MysqlSession`, engine Rust, ORM `Mysql.of` + codegen/`@LeftJoin`.
+- **Não feito ainda:** `.exe` virtualizado / empacote portátil para VB6; binds `?` no Rust.
 
 Não reinventar method channels para MySQL — o caminho oficial é **flutter_rust_bridge**.
 
@@ -53,16 +53,12 @@ Não reinventar method channels para MySQL — o caminho oficial é **flutter_ru
 
 ```dart
 final config = (await GeralIni.loadFile(path)).toMysqlConfig();
-await MysqlSession.initNative();
-final db = MysqlSession.native();
-await db.connect(config);
+await Mysql.boot(config: config);
+ClienteModel.box; // register
 
-// SQL puro
-final raw = await db.query('SELECT * FROM clientes LIMIT 10');
-
-// ORM leve (sem JSON)
-final clientes = raw.mapRows(Cliente.fromRow);
-await db.close();
+final clientes = await Mysql.of<ClienteModel>().index();
+await cliente.store();
+await Mysql.disconnect();
 ```
 
 OO sem `fromJson`: mapeie `MysqlRow` para classes do domínio:

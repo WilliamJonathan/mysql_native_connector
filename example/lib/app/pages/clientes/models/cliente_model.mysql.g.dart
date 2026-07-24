@@ -21,6 +21,7 @@ class _ClienteModelMysql {
     name: table,
     primaryKey: primaryKey,
     columns: columns,
+    joins: const [],
   );
 
   static final repo = MysqlRepository<ClienteModel>(
@@ -30,27 +31,10 @@ class _ClienteModelMysql {
     idOf: (m) => m.codigo,
   );
 
-  static MysqlQuery<ClienteModel> query() => repo.query();
-
-  static Future<List<ClienteModel>> index({int limit = 50}) {
-    return repo.all(limit: limit, orderBy: '`cli_nome` ASC');
-  }
-
-  static Future<ClienteModel?> show(Object id) => repo.find(id);
-
-  static Future<ClienteModel> store(ClienteModel model) => repo.save(model);
-
-  static Future<ClienteModel> update(ClienteModel model) async {
-    final existing = await show(model.codigo);
-    if (existing == null) {
-      throw StateError('ClienteModel ${model.codigo} não encontrado.');
-    }
-    return repo.save(model);
-  }
-
-  static Future<bool> destroy(Object id) => repo.deleteById(id);
-
-  static Future<List<ClienteModel>> raw(String sql) => repo.raw(sql);
+  static final box = Mysql.register<ClienteModel>(
+    repo,
+    defaultOrderBy: '`cli_nome` ASC',
+  );
 
   static ClienteModel fromRow(MysqlRow row) {
     return ClienteModel(
@@ -71,8 +55,6 @@ class _ClienteModelMysql {
       };
 }
 
-extension ClienteModelMysqlInstance on ClienteModel {
-  Future<ClienteModel> save() => _ClienteModelMysql.store(this);
-  Future<bool> delete() => _ClienteModelMysql.destroy(codigo);
+extension ClienteModelMysqlColumns on ClienteModel {
   Map<String, Object?> toColumns() => _ClienteModelMysql.toColumns(this);
 }

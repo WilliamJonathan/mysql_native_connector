@@ -1,9 +1,9 @@
 import 'package:mysql_native_connector/mysql_native_connector.dart';
 
-/// Alvo mental (Laravel): só anotações + domínio.
-/// Rode `dart run build_runner build` para gerar o motor + facades.
+/// Alvo mental: só anotações + domínio (+ `box` para registro).
+/// Rode `dart run build_runner build` para gerar o motor.
 @MysqlTable('clientes', orderBy: 'cli_nome')
-class ClienteModelExemplo extends MysqlModel {
+class ClienteModelExemplo extends MysqlModel<ClienteModelExemplo> {
   ClienteModelExemplo({
     required this.codigo,
     required this.nome,
@@ -27,6 +27,7 @@ class ClienteModelExemplo extends MysqlModel {
   @MysqlColumn('cli_endereco')
   final String? endereco;
 
-  // API gerada / facades:
-  // ClienteModel.index() / .show() / .store() / .update() / .destroy()
+  // Uso:
+  // await Mysql.of<ClienteModelExemplo>().index();
+  // await model.store(); / update(); / destroy();
 }

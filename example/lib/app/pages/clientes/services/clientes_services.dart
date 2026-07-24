@@ -11,10 +11,12 @@ class ClientesServices implements IClientesServices {
 
   factory ClientesServices() => instance;
 
+  MysqlBox<ClienteModel> get _db => Mysql.of<ClienteModel>();
+
   @override
   Future<ResultState<List<ClienteModel>>> index({int limit = 50}) async {
     try {
-      final rows = await ClienteModel.index(limit: limit);
+      final rows = await _db.index(limit: limit);
       if (rows.isEmpty) return EmptyResultState();
       return SuccessResultState(result: rows);
     } catch (e) {
@@ -25,7 +27,7 @@ class ClientesServices implements IClientesServices {
   @override
   Future<ResultState<ClienteModel>> show(String codigo) async {
     try {
-      final row = await ClienteModel.show(codigo);
+      final row = await _db.show(codigo);
       if (row == null) return EmptyResultState();
       return SuccessResultState(result: row);
     } catch (e) {
@@ -40,7 +42,8 @@ class ClientesServices implements IClientesServices {
   }) async {
     try {
       final like = mysqlLiteral('%${termo.trim()}%');
-      final rows = await ClienteModel.query()
+      final rows = await _db
+          .query()
           .where(
             'cli_nome LIKE $like OR cli_fantasia LIKE $like OR cli_cgc LIKE $like',
           )
@@ -57,7 +60,7 @@ class ClientesServices implements IClientesServices {
   @override
   Future<ResultState<ClienteModel>> store(ClienteModel model) async {
     try {
-      final saved = await ClienteModel.store(model);
+      final saved = await model.store();
       return SuccessResultState(result: saved);
     } catch (e) {
       return ErrorResultState(message: '$e');
@@ -67,7 +70,7 @@ class ClientesServices implements IClientesServices {
   @override
   Future<ResultState<ClienteModel>> update(ClienteModel model) async {
     try {
-      final saved = await ClienteModel.update(model);
+      final saved = await model.update();
       return SuccessResultState(result: saved);
     } catch (e) {
       return ErrorResultState(message: '$e');
@@ -77,7 +80,7 @@ class ClientesServices implements IClientesServices {
   @override
   Future<ResultState<bool>> destroy(String codigo) async {
     try {
-      final ok = await ClienteModel.destroy(codigo);
+      final ok = await _db.destroy(codigo);
       if (!ok) return EmptyResultState();
       return SuccessResultState(result: true);
     } catch (e) {

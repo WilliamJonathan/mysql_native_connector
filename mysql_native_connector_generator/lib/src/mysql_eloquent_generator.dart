@@ -21,7 +21,29 @@ class _Col {
   final bool primaryKey;
 }
 
-/// Gera `_ClassMysql` com API Laravel: index/show/store/update/destroy.
+class _Join {
+  _Join({
+    required this.fieldName,
+    required this.relatedClassName,
+    required this.table,
+    required this.localKey,
+    required this.foreignKey,
+    required this.alias,
+    required this.columns,
+    required this.nullable,
+  });
+
+  final String fieldName;
+  final String relatedClassName;
+  final String table;
+  final String localKey;
+  final String foreignKey;
+  final String alias;
+  final List<_Col> columns;
+  final bool nullable;
+}
+
+/// Gera motor Eloquent: schema, register, fromRow (com LeftJoin).
 class MysqlEloquentGenerator extends GeneratorForAnnotation<MysqlTable> {
   static final _columnChecker = TypeChecker.typeNamed(
     MysqlColumn,
@@ -33,6 +55,14 @@ class MysqlEloquentGenerator extends GeneratorForAnnotation<MysqlTable> {
   );
   static final _nnChecker = TypeChecker.typeNamed(
     MysqlNotNull,
+    inPackage: 'mysql_native_connector',
+  );
+  static final _leftJoinChecker = TypeChecker.typeNamed(
+    LeftJoin,
+    inPackage: 'mysql_native_connector',
+  );
+  static final _tableChecker = TypeChecker.typeNamed(
+    MysqlTable,
     inPackage: 'mysql_native_connector',
   );
 
@@ -54,8 +84,17 @@ class MysqlEloquentGenerator extends GeneratorForAnnotation<MysqlTable> {
     final orderBy = annotation.peek('orderBy')?.stringValue;
 
     final columns = <_Col>[];
+    final joins = <_Join>[];
+
     for (final field in element.fields) {
       if (field.isStatic || field.isSynthetic) continue;
+
+      final leftJoin = _leftJoinAnnotation(field);
+      if (leftJoin != null) {
+        joins.add(leftJoin);
+        continue;
+      }
+
       final ann = _columnAnnotation(field);
       if (ann == null) continue;
 
@@ -92,14 +131,18 @@ class MysqlEloquentGenerator extends GeneratorForAnnotation<MysqlTable> {
         ? null
         : (orderBy.contains(' ') ? orderBy : '`$orderBy` ASC');
 
-    final fromRowArgs = columns.map((c) {
-      final reader = _rowReader(c);
-      return '${c.fieldName}: $reader';
-    }).join(',\n      ');
+    final fromRowArgs = <String>[
+      ...columns.map((c) => '${c.fieldName}: ${_rowReader(c)}'),
+      ...joins.map((j) => '${j.fieldName}: ${_joinReader(j)}'),
+    ].join(',\n      ');
 
     final toColEntries = columns
         .map((c) => "'${c.columnName}': m.${c.fieldName},")
         .join('\n      ');
+
+    final joinsLiteral = joins.isEmpty
+        ? 'const []'
+        : '[\n${joins.map(_joinSpecLiteral).join('\n')}\n  ]';
 
     return '''
 // ignore_for_file: type=lint, unused_element
@@ -116,6 +159,7 @@ class $engine {
     name: table,
     primaryKey: primaryKey,
     columns: columns,
+    joins: $joinsLiteral,
   );
 
   static final repo = MysqlRepository<$className>(
@@ -125,32 +169,10 @@ class $engine {
     idOf: (m) => m.${primary.fieldName},
   );
 
-  static MysqlQuery<$className> query() => repo.query();
-
-  static Future<List<$className>> index({int limit = 50}) {
-    return repo.all(
-      limit: limit,
-      orderBy: ${defaultOrder == null ? 'null' : "'$defaultOrder'"},
-    );
-  }
-
-  static Future<$className?> show(Object id) => repo.find(id);
-
-  static Future<$className> store($className model) => repo.save(model);
-
-  static Future<$className> update($className model) async {
-    final existing = await show(model.${primary.fieldName});
-    if (existing == null) {
-      throw StateError(
-        '$className \${model.${primary.fieldName}} não encontrado.',
-      );
-    }
-    return repo.save(model);
-  }
-
-  static Future<bool> destroy(Object id) => repo.deleteById(id);
-
-  static Future<List<$className>> raw(String sql) => repo.raw(sql);
+  static final box = Mysql.register<$className>(
+    repo,
+    defaultOrderBy: ${defaultOrder == null ? 'null' : "'$defaultOrder'"},
+  );
 
   static $className fromRow(MysqlRow row) {
     return $className(
@@ -163,12 +185,43 @@ class $engine {
     };
 }
 
-extension ${className}MysqlInstance on $className {
-  Future<$className> save() => $engine.store(this);
-  Future<bool> delete() => $engine.destroy(${primary.fieldName});
+extension ${className}MysqlColumns on $className {
   Map<String, Object?> toColumns() => $engine.toColumns(this);
 }
 ''';
+  }
+
+  String _joinSpecLiteral(_Join j) {
+    final cols = j.columns.map((c) => "'${c.columnName}'").join(', ');
+    return '''    MysqlJoinSpec(
+      table: '${j.table}',
+      localKey: '${j.localKey}',
+      foreignKey: '${j.foreignKey}',
+      alias: '${j.alias}',
+      columns: [$cols],
+    ),''';
+  }
+
+  String _joinReader(_Join j) {
+    final detectCol = j.columns.isEmpty
+        ? 'null'
+        : "row['${j.alias}__${j.columns.first.columnName}']";
+    final args = j.columns.map((c) {
+      final aliased = _Col(
+        fieldName: c.fieldName,
+        columnName: '${j.alias}__${c.columnName}',
+        dartType: c.dartType,
+        nullable: true,
+        primaryKey: c.primaryKey,
+      );
+      return '${c.fieldName}: ${_rowReader(aliased)}';
+    }).join(',\n        ');
+
+    return '''($detectCol == null)
+          ? null
+          : ${j.relatedClassName}(
+        $args
+      )''';
   }
 
   MysqlColumn? _columnAnnotation(FieldElement field) {
@@ -188,6 +241,107 @@ extension ${className}MysqlInstance on $className {
       }
     }
     return null;
+  }
+
+  _Join? _leftJoinAnnotation(FieldElement field) {
+    for (final meta in field.metadata.annotations) {
+      final value = meta.computeConstantValue();
+      if (value == null) continue;
+      final type = value.type;
+      if (type == null || !_leftJoinChecker.isExactlyType(type)) continue;
+
+      final table = value.getField('table')?.toStringValue();
+      final localKey = value.getField('localKey')?.toStringValue();
+      final foreignKey = value.getField('foreignKey')?.toStringValue();
+      final alias =
+          value.getField('alias')?.toStringValue() ?? field.name!;
+
+      if (table == null || localKey == null || foreignKey == null) {
+        throw InvalidGenerationSourceError(
+          '@LeftJoin incompleto em ${field.name}.',
+          element: field,
+        );
+      }
+
+      final relatedType = field.type;
+      final relatedElement = relatedType.element;
+      if (relatedElement is! ClassElement) {
+        throw InvalidGenerationSourceError(
+          '@LeftJoin em ${field.name} precisa de um tipo class (model).',
+          element: field,
+        );
+      }
+
+      // Aceita EnderecoModel? → element ainda é a class.
+      final relatedColumns = _columnsOf(relatedElement);
+      if (relatedColumns.isEmpty) {
+        throw InvalidGenerationSourceError(
+          '${relatedElement.name} (join de ${field.name}) precisa de '
+          '@MysqlColumn/@MysqlPrimaryKey.',
+          element: field,
+        );
+      }
+
+      // Valida que o relacionado tem @MysqlTable (aviso via tabela explícita).
+      _ensureMysqlTable(relatedElement, field);
+
+      return _Join(
+        fieldName: field.name!,
+        relatedClassName: relatedElement.name!,
+        table: table,
+        localKey: localKey,
+        foreignKey: foreignKey,
+        alias: alias,
+        columns: relatedColumns,
+        nullable: relatedType.nullabilitySuffix == NullabilitySuffix.question,
+      );
+    }
+    return null;
+  }
+
+  void _ensureMysqlTable(ClassElement related, FieldElement field) {
+    final hasTable = related.metadata.annotations.any((meta) {
+      final value = meta.computeConstantValue();
+      final type = value?.type;
+      return type != null && _tableChecker.isExactlyType(type);
+    });
+    if (!hasTable) {
+      throw InvalidGenerationSourceError(
+        '${related.name} usado em @LeftJoin (${field.name}) precisa de @MysqlTable.',
+        element: field,
+      );
+    }
+  }
+
+  List<_Col> _columnsOf(ClassElement element) {
+    final columns = <_Col>[];
+    for (final field in element.fields) {
+      if (field.isStatic || field.isSynthetic) continue;
+      if (_hasLeftJoinMeta(field)) continue;
+      final ann = _columnAnnotation(field);
+      if (ann == null) continue;
+      columns.add(
+        _Col(
+          fieldName: field.name!,
+          columnName: ann.name,
+          dartType: _typeName(field.type),
+          nullable: field.type.nullabilitySuffix == NullabilitySuffix.question,
+          primaryKey: ann.primaryKey,
+        ),
+      );
+    }
+    return columns;
+  }
+
+  bool _hasLeftJoinMeta(FieldElement field) {
+    for (final meta in field.metadata.annotations) {
+      final value = meta.computeConstantValue();
+      final type = value?.type;
+      if (type != null && _leftJoinChecker.isExactlyType(type)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   String _typeName(DartType type) => type.getDisplayString();
